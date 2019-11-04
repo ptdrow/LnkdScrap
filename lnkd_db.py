@@ -105,7 +105,7 @@ def get_other_contacts(driver,urls, ids):
             if not click_siguiente(driver):
                 break
         
-        save_contacts(contacts, file="contacts" + str(id_) + ".csv", myself=None)
+        save_contacts(contacts, file="contacts/contacts" + str(id_) + ".csv", myself=None)
         
         
 def save_contacts(contacts, file="contacts/contacts.csv", myself=None):

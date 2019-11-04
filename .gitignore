@@ -1,0 +1,11 @@
+# ignorar  los archivos .db
+*.db
+
+# ignorar la carpeta "contacts"
+contacts/
+
+#ignorar my_credentials
+my_credentials.py
+
+
+
