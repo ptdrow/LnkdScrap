@@ -108,7 +108,7 @@ def get_other_contacts(driver,urls, ids):
         save_contacts(contacts, file="contacts" + str(id_) + ".csv", myself=None)
         
         
-def save_contacts(contacts, file="contacts.csv", myself=None):
+def save_contacts(contacts, file="contacts/contacts.csv", myself=None):
     archivo_salida = open(file, "w", encoding="utf8")
     #Get the data from all the elements of the list except the last two (after the reverse are the first two)
     archivo_salida.write(f"id,nombre,ocupacion,url\n")
@@ -257,7 +257,7 @@ if __name__ == "__main__":
     
     if not verificar_tabla(conn, ["contacts"]):
         crear_tabla(conn)
-        archivo = open("contacts.csv", "r", encoding="utf8")
+        archivo = open("contacts/contacts.csv", "r", encoding="utf8")
         lectura = csv.reader(archivo, delimiter=',')
         next(lectura)
         for contacto in lectura:
