@@ -10,6 +10,7 @@ import csv
 from selenium import webdriver
 import random
 import time
+import os
 
 def open_browser(firefox_profile_path):
     profile = webdriver.FirefoxProfile(firefox_profile_path)
@@ -26,7 +27,6 @@ def scroll_down_search_page(driver):
         SCROLL_PAUSE_TIME = random.randint(2,3)
         time.sleep(SCROLL_PAUSE_TIME)
     
-        # Calculate new scroll height and compare with last scroll height
         
 def scroll_down(driver):
     last_height = driver.execute_script("return document.body.scrollHeight")
@@ -69,6 +69,26 @@ def get_my_contacts(driver):
     
     return contacts
 
+    
+def add_to_graph(reference_id, contacts):
+    if not os.path.exists("contacts"):
+        os.mkdir("contacts")
+    
+    if not os.path.exists("contacts/connections.csv"):
+        archivo = open("contacts/connections.csv", "w", encoding="utf8")
+        archivo.write("Source,Target\n")
+    else:
+        archivo = open("contacts/connections.csv", "a", encoding="utf8")
+    
+    for contact in contacts:
+        archivo.write(f"{reference_id},{contact['id']}\n")
+    
+    archivo.close()
+
+
+def is_contact_in_db():
+    pass
+
 def go_to_contacts_page(driver,url):
     driver.get(url)
     time.sleep(random.randint(3,10))
@@ -76,6 +96,7 @@ def go_to_contacts_page(driver,url):
     element.click()
     time.sleep(random.randint(10,15))
     
+
 def get_this_page_contacts(driver, i):
     contacts = []
     scroll_down_search_page(driver)
@@ -169,6 +190,7 @@ def insertar_contacto(connection, contact):
     cursor.execute(sql,datos)
     connection.commit()
 
+
 def encuesta_contactos(connection):
     sql = 'SELECT id, nombre from contacts'
     cursor = conn.cursor()
@@ -205,6 +227,7 @@ def select_contactos(connection, cantidad):
     for row in rows[:cantidad]:
         ids.append(row[0])
     return ids
+
 
 def ids_to_string(ids):
     s = ""
@@ -245,6 +268,7 @@ def click_siguiente(driver):
     else:
         return(False)
 
+
 if __name__ == "__main__":
     import my_credentials
     
@@ -252,6 +276,8 @@ if __name__ == "__main__":
     contactos = get_my_contacts(driver)
     save_contacts(contactos, 
                   myself = my_credentials.myself)
+    
+    add_to_graph("0", contactos)
     
     conn = conectar_sql()
     
@@ -271,7 +297,7 @@ if __name__ == "__main__":
     contact_ids = select_contactos(conn, 10)
     urls = get_urls(conn, contact_ids)
     
-    get_other_contacts(driver,urls, contact_ids[3:])
+    get_other_contacts(driver,urls, contact_ids)
     
     driver.quit()
     conn.close()
