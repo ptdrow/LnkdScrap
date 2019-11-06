@@ -12,6 +12,7 @@ import random
 import time
 import os
 
+
 def open_browser(firefox_profile_path):
     profile = webdriver.FirefoxProfile(firefox_profile_path)
     return webdriver.Firefox(firefox_profile=profile)
@@ -86,8 +87,16 @@ def add_to_graph(reference_id, contacts):
     archivo.close()
 
 
-def is_contact_in_db():
-    pass
+def is_contact_in_db(connection,url):
+    cursor = connection.cursor()
+    sql = """SELECT id FROM contacts WHERE url = ? """
+    cursor.execute(sql, url)
+    id_ = cursor.fetchone()
+    if id_:
+        return id_[0]
+    else:
+        return False
+
 
 def go_to_contacts_page(driver,url):
     driver.get(url)
@@ -96,31 +105,43 @@ def go_to_contacts_page(driver,url):
     element.click()
     time.sleep(random.randint(10,15))
     
+def get_last_id(connection):
+    cursor = connection.cursor()
+    sql = "SELECT MAX(id) FROM contacts"
+    cursor.execute(sql)
+    return(cursor.fetchone()[0])
 
-def get_this_page_contacts(driver, i):
+
+def get_this_page_contacts(driver, connection):
+    last_id = get_last_id(connection)
     contacts = []
     scroll_down_search_page(driver)
     lista = driver.find_elements_by_class_name("search-result__wrapper")
     for element in lista:
-        i += 1
         link = element.find_element_by_tag_name("a").get_property("href")
+        found_id = is_contact_in_db(connection, link)
+        if found_id:
+            this_id = found_id
+        else:
+            last_id += 1
+            this_id = last_id
+            
         name = element.find_elements_by_tag_name("span")[1].text.split("\n")[0]
         name = name.replace(",","")
         occupation = element.find_elements_by_tag_name("span")[7].text
         occupation = occupation.replace(",",";")
-        print(f"{i:06d},{name},{occupation},{link}\n")
-        contacts.append({"id": i, "nombre":name, "ocupacion":occupation, "url":link})
-    return contacts, i
+        #print(f"{this_id},{name},{occupation},{link}\n")
+        contacts.append({"id": this_id, "nombre":name, "ocupacion":occupation, "url":link})
+    return contacts
     
     
-def get_other_contacts(driver,urls, ids):
+def get_other_contacts(driver,connection, urls, ids):
     for id_, url in zip(ids,urls):
         go_to_contacts_page(driver,url)
                 
         contacts = []
-        i=0
         while True:
-            page_contacts, i = get_this_page_contacts(driver,i)
+            page_contacts = get_this_page_contacts(driver, connection)
             contacts.extend(page_contacts)
             
             if not click_siguiente(driver):
@@ -192,7 +213,7 @@ def insertar_contacto(connection, contact):
 
 
 def encuesta_contactos(connection):
-    sql = 'SELECT id, nombre from contacts'
+    sql = 'SELECT id, nombre FROM contacts'
     cursor = conn.cursor()
     cursor.execute(sql)
     conn.commit()
@@ -297,7 +318,7 @@ if __name__ == "__main__":
     contact_ids = select_contactos(conn, 10)
     urls = get_urls(conn, contact_ids)
     
-    get_other_contacts(driver,urls, contact_ids)
+    get_other_contacts(driver, conn, urls, contact_ids)
     
     driver.quit()
     conn.close()
