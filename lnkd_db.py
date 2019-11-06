@@ -90,7 +90,7 @@ def add_to_graph(reference_id, contacts):
 def is_contact_in_db(connection,url):
     cursor = connection.cursor()
     sql = """SELECT id FROM contacts WHERE url = ? """
-    cursor.execute(sql, url)
+    cursor.execute(sql, [url])
     id_ = cursor.fetchone()
     if id_:
         return id_[0]
